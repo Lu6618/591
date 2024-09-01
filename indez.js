@@ -8,9 +8,25 @@ async function handleRequest(request) {
         const response = await fetch('http://ao.ke');
         const text = await response.text();
 
+        // 如果内容为空，返回错误信息
+        if (!text || text.trim().length === 0) {
+            return new Response('无法获取到内容，请检查目标网址是否有效。', {
+                status: 500,
+                headers: { 'content-type': 'text/plain;charset=UTF-8' },
+            });
+        }
+
         // 使用正则表达式只提取账号和正确显示的密码（不包含星号的）
         const accountRegex = /(\S+区账号(?:（[\s\S]*?）)?)[\s\S]*?账号：(\S+@\S+) 密码：([^\*]+)/g;
         const accounts = [...text.matchAll(accountRegex)];
+
+        // 如果没有匹配的账号，返回提示信息
+        if (accounts.length === 0) {
+            return new Response('未找到有效的账号信息。', {
+                status: 500,
+                headers: { 'content-type': 'text/plain;charset=UTF-8' },
+            });
+        }
 
         // 生成账号列表的HTML
         const accountListHTML = accounts.map(match => `
